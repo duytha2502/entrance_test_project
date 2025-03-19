@@ -7,22 +7,22 @@
 
 .game-container {
     padding: 20px;
-    border: 1px solid #000;
+    border: 2px solid #000;
     width: 600px;
 }
 
 .game-header {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 60px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 100px;
 }
 
 .game-btn {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 60px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
 }
 
 .game-board {
@@ -34,20 +34,31 @@
     border: 2px solid black;
 }
 
+.game-board p {
+    margin: 0;
+    font-size: 12px;
+}
+
 .circle {
     position: absolute;
     width: 40px;
     height: 40px;
-    border: 2px solid brown;
+    border: 1px solid brown;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
+    flex-direction: column;
+    gap: 0px;
     cursor: pointer;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.3s ease-in-out;
 }
 
-.fade-out {
-    opacity: 0;
+.clickedColor {
+    background-color: #C64732;
+}
+
+.disabledBtn {
+    opacity: 0.6;
+    pointer-events: none;
 }
