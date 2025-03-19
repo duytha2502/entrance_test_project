@@ -7,6 +7,7 @@ function Circle({ circle, onClick }) {
                 left: circle.x,
                 top: circle.y,
                 opacity: circle.countdown ? circle.countdown / 3 : 1,
+                zIndex: -circle.id,
             }}
         >
             <p>{circle.id}</p>

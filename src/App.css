@@ -52,6 +52,7 @@
     flex-direction: column;
     gap: 0px;
     cursor: pointer;
+    background-color: #fff;
     transition: opacity 0.3s ease-in-out;
 }
 

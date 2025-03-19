@@ -14,6 +14,7 @@ function GameHeader({ value, time, handleInputValue }) {
                         fontSize: '14px',
                         padding: '2px',
                         border: '1px solid #000',
+
                     }}
                     type='text'
                     value={value}

@@ -12,7 +12,6 @@ export default function Game() {
     const [title, setTitle] = useState("LET'S PLAY");
     const [isAutoPlay, setIsAutoPlay] = useState(false);
     const [circles, setCircles] = useState([]);
-    // const [disabled, setDisabled] = useState(false);
 
     const nextNumberRef = useRef(1);
     const intervalRef = useRef(null);
@@ -22,8 +21,8 @@ export default function Game() {
     const generateCircles = (num) => {
         return Array.from({ length: num }, (_, i) => ({
             id: i + 1,
-            x: Math.random() * (600 - 50),
-            y: Math.random() * (400 - 50),
+            x: Math.random() * (600 - 40),
+            y: Math.random() * (400 - 40),
         }));
     };
 
@@ -37,11 +36,10 @@ export default function Game() {
             setTitle("LET'S PLAY");
             setTime(0);
             isGameOverRef.current = false;
+            nextNumberRef.current = 1;
 
             if (newIsPlay) {
                 setCircles(generateCircles(value));
-
-                nextNumberRef.current = 1;
 
                 if (!intervalRef.current) {
                     intervalRef.current = setInterval(() => {
@@ -125,22 +123,6 @@ export default function Game() {
         return () => clearInterval(interval);
     }, [isAutoPlay, isPlay]);
 
-    // useEffect(() => {
-    //     if (isPlay) {
-    //         setTime(0);
-    //         if (!intervalRef.current) {
-    //             intervalRef.current = setInterval(() => {
-    //                 setTime((prevTime) => prevTime + 0.1);
-    //             }, 100);
-    //         }
-    //     } else {
-    //         // setTitle("LET'S PLAY");
-    //         // setTime(0);
-    //         clearInterval(intervalRef.current);
-    //         intervalRef.current = null;
-    //     }
-    // }, [isPlay]);
-
     useEffect(() => {
         if (isPlay && circles.length === 0) {
             setTitle('ALL CLEAR');
@@ -151,7 +133,19 @@ export default function Game() {
 
     return (
         <div className='game-container'>
-            <h2 style={{ fontSize: '20px' }}>{title}</h2>
+            <h2
+                style={{
+                    fontSize: '20px',
+                    color:
+                        title == 'ALL CLEAR'
+                            ? 'green'
+                            : title == 'GAME OVER'
+                            ? '#c64732'
+                            : '#000',
+                }}
+            >
+                {value == 0 ? 'THE POINT MUST MORE THAN 0' : title}
+            </h2>
             <GameHeader
                 value={value}
                 time={time}
@@ -163,6 +157,7 @@ export default function Game() {
                 handleIsAutoPlay={handleIsAutoPlay}
                 isPlay={isPlay}
                 isAutoPlay={isAutoPlay}
+                value={value}
             />
 
             <GameBoard
@@ -172,7 +167,7 @@ export default function Game() {
 
             <p style={{ marginTop: '4px' }}>
                 Next:{' '}
-                {nextNumberRef.current - 1 === value
+                {nextNumberRef.current - 1 == value
                     ? 'Success'
                     : nextNumberRef.current}
             </p>
