@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import GameHeader from './components/GameHeader';
+import GameBoard from './components/GameBoard';
+import GameControl from './components/GameControl';
 
 export default function Game() {
     const [time, setTime] = useState(0);
@@ -7,12 +10,14 @@ export default function Game() {
     const [isPlay, setIsPlay] = useState(false);
     const [value, setValue] = useState(5);
     const [title, setTitle] = useState("LET'S PLAY");
-    const [nextNumber, setNextNumber] = useState(1);
-    const [autoPlay, setAutoPlay] = useState(false);
+    const [isAutoPlay, setIsAutoPlay] = useState(false);
     const [circles, setCircles] = useState([]);
     // const [disabled, setDisabled] = useState(false);
 
+    const nextNumberRef = useRef(1);
     const intervalRef = useRef(null);
+    const circleTimersRef = useRef({});
+    const isGameOverRef = useRef(false);
 
     const generateCircles = (num) => {
         return Array.from({ length: num }, (_, i) => ({
@@ -27,28 +32,51 @@ export default function Game() {
     };
 
     const handleIsPlay = () => {
-        if (isPlay) {
-            setIsPlay(false);
-        } else {
-            setIsPlay(true);
-            setCircles(generateCircles(value));
+        setIsPlay((prev) => {
+            const newIsPlay = !prev;
             setTitle("LET'S PLAY");
-            setNextNumber(1);
-        }
+            setTime(0);
+            isGameOverRef.current = false;
+
+            if (newIsPlay) {
+                setCircles(generateCircles(value));
+
+                nextNumberRef.current = 1;
+
+                if (!intervalRef.current) {
+                    intervalRef.current = setInterval(() => {
+                        setTime((prevTime) => prevTime + 0.1);
+                    }, 100);
+                }
+            } else {
+                setCircles([]);
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+
+            return newIsPlay;
+        });
     };
 
-    const handleAutoPlay = () => {
-        setAutoPlay(!autoPlay);
+    const handleIsAutoPlay = () => {
+        setIsAutoPlay(!isAutoPlay);
     };
 
     const handleCircleClick = (id) => {
-        if (id !== nextNumber) {
+        if (id !== nextNumberRef.current) {
             setTitle('GAME OVER');
+            isGameOverRef.current = true;
+
             clearInterval(intervalRef.current);
             intervalRef.current = null;
+
+            Object.values(circleTimersRef.current).forEach(clearInterval);
+            circleTimersRef.current = {};
+
             return;
         }
-        setNextNumber((prev) => prev + 1);
+
+        nextNumberRef.current += 1;
 
         setCircles((prev) =>
             prev.map((circle) =>
@@ -56,50 +84,62 @@ export default function Game() {
             )
         );
 
-        // setTimeout(() => {
-        //     setCircles((prev) => prev.filter((circle) => circle.id !== id));
-        // }, 500);
-        // Giảm countdown mỗi giây
-
         const countdownInterval = setInterval(() => {
+            if (isGameOverRef.current) return;
             setCircles((prev) =>
                 prev.map((circle) =>
                     circle.id === id
-                        ? { ...circle, countdown: circle.countdown - 0.1 }
+                        ? {
+                              ...circle,
+                              countdown: Math.max(0, circle.countdown - 0.1),
+                          }
                         : circle
                 )
             );
         }, 100);
 
-        // Sau 3 giây, xóa circle
+        circleTimersRef.current[id] = countdownInterval;
+
         setTimeout(() => {
-            clearInterval(countdownInterval);
-            setCircles((prev) => prev.filter((circle) => circle.id !== id));
+            if (!isGameOverRef.current) {
+                clearInterval(countdownInterval);
+                setCircles((prev) => prev.filter((circle) => circle.id !== id));
+                delete circleTimersRef.current[id];
+            }
         }, 3000);
     };
 
-    // useEffect(() => {
-    //     if (value === 0) {
-    //         setIsPlay(!isPlay);
-    //         setDisabled((prev) => !prev);
-    //         setTitle('YOU DUMP! NEED TO INSERT MORE THAN 0 TO PLAY');
-    //     }
-    // }, [value]);
-
     useEffect(() => {
-        if (isPlay) {
-            setTime(0);
-            if (!intervalRef.current) {
-                intervalRef.current = setInterval(() => {
-                    setTime((prevTime) => prevTime + 0.1);
-                }, 100);
+        if (!isAutoPlay || !isPlay) return;
+
+        const interval = setInterval(() => {
+            const nextCircle = circles.find(
+                (c) => c.id === nextNumberRef.current
+            );
+
+            if (nextCircle) {
+                handleCircleClick(nextCircle.id);
             }
-        } else {
-            setTime(0);
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-    }, [isPlay]);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [isAutoPlay, isPlay]);
+
+    // useEffect(() => {
+    //     if (isPlay) {
+    //         setTime(0);
+    //         if (!intervalRef.current) {
+    //             intervalRef.current = setInterval(() => {
+    //                 setTime((prevTime) => prevTime + 0.1);
+    //             }, 100);
+    //         }
+    //     } else {
+    //         // setTitle("LET'S PLAY");
+    //         // setTime(0);
+    //         clearInterval(intervalRef.current);
+    //         intervalRef.current = null;
+    //     }
+    // }, [isPlay]);
 
     useEffect(() => {
         if (isPlay && circles.length === 0) {
@@ -107,74 +147,35 @@ export default function Game() {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
         }
-    }, [circles]);
+    }, [circles, isPlay]);
 
     return (
         <div className='game-container'>
             <h2 style={{ fontSize: '20px' }}>{title}</h2>
-            <div className='game-header'>
-                <div>
-                    <p>Points: </p>
-                    <p>Time: </p>
-                </div>
-                <div>
-                    <input
-                        style={{
-                            backgroundColor: '#fff',
-                            outline: 'none',
-                            color: '#000',
-                            fontSize: '14px',
-                            padding: '2px',
-                            border: '1px solid #000',
-                        }}
-                        type='text'
-                        value={value}
-                        onChange={(e) => handleInputValue(e)}
-                    />
-                    <p style={{ paddingTop: '14px', margin: '0px' }}>
-                        {time.toFixed(1)}s
-                    </p>
-                </div>
-            </div>
-            <div className='game-btn'>
-                <button
-                    onClick={handleIsPlay}
-                    // className={`${disabled ? 'disabledBtn' : ''}`}
-                >
-                    {isPlay ? 'Restart' : 'Play'}
-                </button>
-                <button onClick={handleAutoPlay}>
-                    Auto Play {autoPlay ? 'OFF' : 'ON'}
-                </button>
-            </div>
+            <GameHeader
+                value={value}
+                time={time}
+                handleInputValue={handleInputValue}
+            />
 
-            <div className='game-board'>
-                {circles.map((circle) => (
-                    <div
-                        key={circle.id}
-                        className={`circle ${
-                            circle.countdown ? 'clickedColor' : ''
-                        }`}
-                        onClick={() => handleCircleClick(circle.id)}
-                        style={{
-                            left: circle.x,
-                            top: circle.y,
-                            opacity: circle.countdown
-                                ? circle.countdown / 3
-                                : 1,
-                        }}
-                    >
-                        <p>{circle.id}</p>
-                        {circle.countdown !== undefined && (
-                            <p style={{ color: '#fff' }}>
-                                {circle.countdown.toFixed(1)}
-                            </p>
-                        )}
-                    </div>
-                ))}
-            </div>
+            <GameControl
+                handleIsPlay={handleIsPlay}
+                handleIsAutoPlay={handleIsAutoPlay}
+                isPlay={isPlay}
+                isAutoPlay={isAutoPlay}
+            />
 
-            <p style={{ marginTop: '4px' }}>Next: {nextNumber}</p>
+            <GameBoard
+                circles={circles}
+                handleCircleClick={handleCircleClick}
+            />
+
+            <p style={{ marginTop: '4px' }}>
+                Next:{' '}
+                {nextNumberRef.current - 1 === value
+                    ? 'Success'
+                    : nextNumberRef.current}
+            </p>
         </div>
     );
 }
