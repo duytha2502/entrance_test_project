@@ -12,22 +12,34 @@ export default function Game() {
     const [title, setTitle] = useState("LET'S PLAY");
     const [isAutoPlay, setIsAutoPlay] = useState(false);
     const [circles, setCircles] = useState([]);
+    const [isMoveMode, setIsMoveMode] = useState(false);
 
     const nextNumberRef = useRef(1);
     const intervalRef = useRef(null);
     const circleTimersRef = useRef({});
     const isGameOverRef = useRef(false);
+    const moveIntervalRef = useRef(null);
 
     const generateCircles = (num) => {
         return Array.from({ length: num }, (_, i) => ({
             id: i + 1,
             x: Math.random() * (600 - 40),
             y: Math.random() * (400 - 40),
+            dx: (Math.random() - 0.5) * 10,
+            dy: (Math.random() - 0.5) * 10,
         }));
     };
 
     const handleInputValue = (e) => {
         setValue(e.target.value);
+    };
+
+    const handleIsAutoPlay = () => {
+        setIsAutoPlay(!isAutoPlay);
+    };
+
+    const handleMoveMode = () => {
+        setIsMoveMode(!isMoveMode);
     };
 
     const handleIsPlay = () => {
@@ -56,17 +68,15 @@ export default function Game() {
         });
     };
 
-    const handleIsAutoPlay = () => {
-        setIsAutoPlay(!isAutoPlay);
-    };
-
     const handleCircleClick = (id) => {
         if (id !== nextNumberRef.current) {
             setTitle('GAME OVER');
-            isGameOverRef.current = true;
 
+            isGameOverRef.current = true;
             clearInterval(intervalRef.current);
+            clearInterval(moveIntervalRef.current);
             intervalRef.current = null;
+            moveIntervalRef.current = null;
 
             Object.values(circleTimersRef.current).forEach(clearInterval);
             circleTimersRef.current = {};
@@ -108,6 +118,30 @@ export default function Game() {
     };
 
     useEffect(() => {
+        if (!isPlay || !isMoveMode) {
+            clearInterval(moveIntervalRef.current);
+            moveIntervalRef.current = null;
+            return;
+        }
+
+        moveIntervalRef.current = setInterval(() => {
+            setCircles((prevCircles) =>
+                prevCircles.map((circle) => {
+                    let newX = circle.x + circle.dx;
+                    let newY = circle.y + circle.dy;
+
+                    if (newX <= 0 || newX >= 560) circle.dx *= -1;
+                    if (newY <= 0 || newY >= 360) circle.dy *= -1;
+
+                    return { ...circle, x: newX, y: newY };
+                })
+            );
+        }, 100);
+
+        return () => clearInterval(moveIntervalRef.current);
+    }, [isPlay, isMoveMode]);
+
+    useEffect(() => {
         if (!isAutoPlay || !isPlay) return;
 
         const interval = setInterval(() => {
@@ -126,8 +160,10 @@ export default function Game() {
     useEffect(() => {
         if (isPlay && circles.length === 0) {
             setTitle('ALL CLEAR');
+            clearInterval(moveIntervalRef.current);
             clearInterval(intervalRef.current);
             intervalRef.current = null;
+            moveIntervalRef.current = null;
         }
     }, [circles, isPlay]);
 
@@ -155,6 +191,8 @@ export default function Game() {
             <GameControl
                 handleIsPlay={handleIsPlay}
                 handleIsAutoPlay={handleIsAutoPlay}
+                handleMoveMode={handleMoveMode}
+                isMoveMode={isMoveMode}
                 isPlay={isPlay}
                 isAutoPlay={isAutoPlay}
                 value={value}
@@ -168,7 +206,7 @@ export default function Game() {
             <p style={{ marginTop: '4px' }}>
                 Next:{' '}
                 {nextNumberRef.current - 1 == value
-                    ? 'Success'
+                    ? 'You win!!!'
                     : nextNumberRef.current}
             </p>
         </div>

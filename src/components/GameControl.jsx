@@ -1,11 +1,12 @@
 function GameControl({
     handleIsPlay,
     handleIsAutoPlay,
+    handleMoveMode,
     isPlay,
+    isMoveMode,
     isAutoPlay,
     value,
 }) {
-    console.log(value);
     return (
         <div className='game-btn'>
             <button
@@ -16,6 +17,9 @@ function GameControl({
             </button>
             <button onClick={handleIsAutoPlay}>
                 Auto Play {isAutoPlay ? 'OFF' : 'ON'}
+            </button>
+            <button onClick={handleMoveMode}>
+                Move Mode {isMoveMode ? 'OFF' : 'ON'}
             </button>
         </div>
     );
