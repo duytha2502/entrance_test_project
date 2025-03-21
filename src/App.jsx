@@ -9,7 +9,6 @@ export default function Game() {
     const [isPlay, setIsPlay] = useState(false);
     const [isAutoPlay, setIsAutoPlay] = useState(false);
     const [isMoveMode, setIsMoveMode] = useState(false);
-    const [isGameActive, setIsGameActive] = useState(false);
     const [value, setValue] = useState(5);
     const [title, setTitle] = useState("LET'S PLAY");
     const [circles, setCircles] = useState([]);
@@ -73,7 +72,6 @@ export default function Game() {
 
     const handleCircleClick = (id) => {
         if (id !== nextNumberRef.current) {
-            setIsGameActive(false);
             setTitle('GAME OVER');
             clearInterval(intervalRef.current);
             clearInterval(moveIntervalRef.current);
@@ -84,8 +82,6 @@ export default function Game() {
 
             return;
         }
-
-        setIsGameActive(true);
         nextNumberRef.current += 1;
 
         setCircles((prev) =>
@@ -108,16 +104,15 @@ export default function Game() {
             );
         }, 100);
 
-        circleTimersRef.current[id] = countdownInterval;
+        circleTimersRef.current[`interval${id}`] = countdownInterval;
 
         const timeout = setTimeout(() => {
             if (!isGameOverRef.current) {
-                setIsGameActive(false);
                 clearInterval(countdownInterval);
                 setCircles((prev) =>
                     prev.filter((circle) => circle.value !== id)
                 );
-                delete circleTimersRef.current[id];
+                delete circleTimersRef.current[`interval${id}`];
                 delete circleTimersRef.current[`timeout_${id}`];
             }
         }, 3000);
@@ -173,10 +168,6 @@ export default function Game() {
         }
     }, [circles, isPlay]);
 
-    // useEffect(() => {
-    //     setIsGameActive(Object.keys(circleTimersRef.current).length > 0);
-    // }, [Object.keys(circleTimersRef.current).length]);
-
     return (
         <div className='game-container'>
             <h2
@@ -204,7 +195,6 @@ export default function Game() {
                 handleMoveMode={handleMoveMode}
                 isMoveMode={isMoveMode}
                 isPlay={isPlay}
-                isGameActive={isGameActive}
                 isAutoPlay={isAutoPlay}
                 value={value}
             />

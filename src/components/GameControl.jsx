@@ -3,7 +3,6 @@ function GameControl({
     handleIsAutoPlay,
     handleMoveMode,
     isPlay,
-    isGameActive,
     isMoveMode,
     isAutoPlay,
     value,
@@ -12,7 +11,7 @@ function GameControl({
         <div className='game-btn'>
             <button
                 onClick={handleIsPlay}
-                className={`${value == 0 || isGameActive ? 'disabledBtn' : ''}`}
+                className={`${value == 0 ? 'disabledBtn' : ''}`}
             >
                 {isPlay ? 'Restart' : 'Play'}
             </button>
