@@ -9,6 +9,7 @@ export default function Game() {
     const [isPlay, setIsPlay] = useState(false);
     const [isAutoPlay, setIsAutoPlay] = useState(false);
     const [isMoveMode, setIsMoveMode] = useState(false);
+    const [isGameActive, setIsGameActive] = useState(false);
     const [value, setValue] = useState(5);
     const [title, setTitle] = useState("LET'S PLAY");
     const [circles, setCircles] = useState([]);
@@ -21,7 +22,7 @@ export default function Game() {
 
     const generateCircles = (num) => {
         return Array.from({ length: num }, (_, i) => ({
-            id: i + 1,
+            value: i + 1,
             x: Math.random() * (600 - 40),
             y: Math.random() * (400 - 40),
             dx: (Math.random() - 0.5) * 10,
@@ -48,6 +49,10 @@ export default function Game() {
             isGameOverRef.current = false;
             nextNumberRef.current = 1;
 
+            Object.values(circleTimersRef.current).forEach(clearInterval);
+            Object.values(circleTimersRef.current).forEach(clearTimeout);
+            circleTimersRef.current = {};
+
             if (!prev) {
                 setCircles(generateCircles(value));
 
@@ -65,10 +70,10 @@ export default function Game() {
             return !prev;
         });
     };
-    console.log(circleTimersRef.current);
 
     const handleCircleClick = (id) => {
         if (id !== nextNumberRef.current) {
+            setIsGameActive(false);
             setTitle('GAME OVER');
             clearInterval(intervalRef.current);
             clearInterval(moveIntervalRef.current);
@@ -77,16 +82,15 @@ export default function Game() {
             intervalRef.current = null;
             moveIntervalRef.current = null;
 
-            circleTimersRef.current = {};
-            Object.values(circleTimersRef.current).forEach(clearInterval);
             return;
         }
 
+        setIsGameActive(true);
         nextNumberRef.current += 1;
 
         setCircles((prev) =>
             prev.map((circle) =>
-                circle.id === id ? { ...circle, countdown: 3 } : circle
+                circle.value === id ? { ...circle, countdown: 3 } : circle
             )
         );
 
@@ -94,7 +98,7 @@ export default function Game() {
             if (isGameOverRef.current) return;
             setCircles((prev) =>
                 prev.map((circle) =>
-                    circle.id === id
+                    circle.value === id
                         ? {
                               ...circle,
                               countdown: Math.max(0, circle.countdown - 0.1),
@@ -106,14 +110,22 @@ export default function Game() {
 
         circleTimersRef.current[id] = countdownInterval;
 
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
             if (!isGameOverRef.current) {
+                setIsGameActive(false);
                 clearInterval(countdownInterval);
-                setCircles((prev) => prev.filter((circle) => circle.id !== id));
+                setCircles((prev) =>
+                    prev.filter((circle) => circle.value !== id)
+                );
                 delete circleTimersRef.current[id];
+                delete circleTimersRef.current[`timeout_${id}`];
             }
         }, 3000);
+
+        circleTimersRef.current[`timeout_${id}`] = timeout;
     };
+
+    console.log(circleTimersRef.current);
 
     useEffect(() => {
         if (!isPlay || !isMoveMode) return;
@@ -140,11 +152,11 @@ export default function Game() {
 
         const interval = setInterval(() => {
             const nextCircle = circles.find(
-                (c) => c.id === nextNumberRef.current
+                (c) => c.value === nextNumberRef.current
             );
 
             if (nextCircle) {
-                handleCircleClick(nextCircle.id);
+                handleCircleClick(nextCircle.value);
             }
         }, 1000);
 
@@ -160,6 +172,10 @@ export default function Game() {
             moveIntervalRef.current = null;
         }
     }, [circles, isPlay]);
+
+    // useEffect(() => {
+    //     setIsGameActive(Object.keys(circleTimersRef.current).length > 0);
+    // }, [Object.keys(circleTimersRef.current).length]);
 
     return (
         <div className='game-container'>
@@ -188,6 +204,7 @@ export default function Game() {
                 handleMoveMode={handleMoveMode}
                 isMoveMode={isMoveMode}
                 isPlay={isPlay}
+                isGameActive={isGameActive}
                 isAutoPlay={isAutoPlay}
                 value={value}
             />

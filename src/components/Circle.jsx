@@ -2,15 +2,15 @@ function Circle({ circle, onClick }) {
     return (
         <div
             className={`circle ${circle.countdown ? 'clickedColor' : ''}`}
-            onClick={() => onClick(circle.id)}
+            onClick={() => onClick(circle.value)}
             style={{
                 left: circle.x,
                 top: circle.y,
                 opacity: circle.countdown ? circle.countdown / 3 : 1,
-                zIndex: -circle.id,
+                zIndex: -circle.value,
             }}
         >
-            <p>{circle.id}</p>
+            <p>{circle.value}</p>
             {circle.countdown !== undefined && (
                 <p style={{ color: '#fff' }}>{circle.countdown.toFixed(1)}</p>
             )}

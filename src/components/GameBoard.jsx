@@ -5,7 +5,7 @@ function GameBoard({ circles, handleCircleClick }) {
         <div className='game-board'>
             {circles.map((circle) => (
                 <Circle
-                    key={circle.id}
+                    key={circle.value}
                     circle={circle}
                     onClick={handleCircleClick}
                 />
